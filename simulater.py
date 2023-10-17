@@ -51,7 +51,7 @@ plt.legend()
 plt.xlabel("time")
 plt.ylabel("voltage")
 plt.show()
-fig.savefig("1.png",dpi=300)
+fig.savefig("./figure/V100.png",dpi=300)
 plt.close()
 
 # %%
@@ -63,6 +63,6 @@ plt.legend()
 plt.xlabel("time")
 plt.ylabel("voltage")
 plt.show()
-fig.savefig("2.png",dpi=300)
+fig.savefig("./figure/V100-V1000000001.png",dpi=300)
 
 
