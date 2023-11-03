@@ -10,6 +10,11 @@ import numpy as np
 import pandas as pd
 # 正则匹配
 import re
+# 屏蔽错误输出
+import sys,os
+# 进度条,在jupyter notebook中需要使用tqdm.notebook中的库，在正常py中只要使用tqdm中的库
+# from tqdm.notebook import trange # 在jupyter notebook文件中使用这个
+from tqdm import trange # 在py文件中使用这个
 
 # %%
 # 创建NgSpiceShared对象
@@ -82,9 +87,12 @@ stop_time=cores_resistance[0].loc[:stop_number,'Time']
 # 2、开始仿真
 # 3、在仿真中途会在设置好的时间中断仿真，此时可以进行一些指令，最后执行resume指令继续仿真，直到下一个断点或终点
 
-#设置断点，每100ns设置一个断点
+#设置断点
 for i in range(stop_number):
     ngspice.stop('time = '+str(stop_time[i])+'n')
+    
+# 禁用错误输出，避免刷屏
+sys.stderr = open(os.devnull, 'w')
 
 #开始仿真
 #由于pyspice总是在stop时报错command error，但实际没有问题，所以使用try except保证后续代码继续执行
@@ -93,9 +101,10 @@ try:
 except:
     pass
 
-#当中断时执行的指令
-for i in range(stop_number):
-    #更换负载
+# 当中断时执行的指令
+for i in trange(stop_number):
+    #print('%d/%d'%(i,stop_number))
+    # 更换负载
     for core in range(4):
         for load in range(6):
             # 当负载为0时计算得到的电阻为无穷大，无法设置，以10000000000作为无穷大
@@ -104,12 +113,14 @@ for i in range(stop_number):
             else:
                 ngspice.alter_device(Cores_Load_resistances[core][load],resistance=cores_resistance[core].loc[i,'Resistance'])
         
-    #由于pyspice总是在stop时报错command error，所以使用try except保证后续代码继续执行
+    # 由于pyspice总是在stop时报错command error，所以使用try except保证后续代码继续执行
     try:
         ngspice.resume(background=False)
     except: 
         pass
 
+# 恢复错误输出
+sys.stderr = sys.__stderr__
 # 获取仿真结果
 plots = ngspice.plot(simulation=None, plot_name=ngspice.last_plot)
 analysis=plots.to_analysis()
@@ -120,7 +131,7 @@ plt.legend()
 plt.xlabel("time")
 plt.ylabel("voltage")
 plt.show()
-fig.savefig("./figure/V100.png",dpi=300)
+#fig.savefig("./figure/V100.png",dpi=300)
 plt.close()
 
 # %%
