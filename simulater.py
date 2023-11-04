@@ -13,8 +13,9 @@ import re
 # 屏蔽错误输出
 import sys,os
 # 进度条,在jupyter notebook中需要使用tqdm.notebook中的库，在正常py中只要使用tqdm中的库
-# from tqdm.notebook import trange # 在jupyter notebook文件中使用这个
-from tqdm import trange # 在py文件中使用这个
+from tqdm.notebook import trange # 在jupyter notebook文件中使用这个
+from rich.progress import Progress
+# from tqdm import trange # 在py文件中使用这个
 
 # %%
 # 创建NgSpiceShared对象
@@ -70,7 +71,7 @@ for core in range(4):
     for load in range(6):
         Core_Load_resistance.append(Load_resistances[core*6+load])
     Cores_Load_resistances.append(Core_Load_resistance)
-print(Cores_Load_resistances)
+# print(Cores_Load_resistances)
 
 # %%
 # 参数设置
@@ -100,24 +101,27 @@ try:
     ngspice.exec_command('tran '+step_time+' '+end_time)
 except:
     pass
-
-# 当中断时执行的指令
-for i in trange(stop_number):
-    #print('%d/%d'%(i,stop_number))
-    # 更换负载
-    for core in range(4):
-        for load in range(6):
-            # 当负载为0时计算得到的电阻为无穷大，无法设置，以10000000000作为无穷大
-            if cores_resistance[core].loc[i,'Resistance'] == float('inf'):
-                ngspice.alter_device(Cores_Load_resistances[core][load],resistance=10000000000)
-            else:
-                ngspice.alter_device(Cores_Load_resistances[core][load],resistance=cores_resistance[core].loc[i,'Resistance'])
-        
-    # 由于pyspice总是在stop时报错command error，所以使用try except保证后续代码继续执行
-    try:
-        ngspice.resume(background=False)
-    except: 
-        pass
+with Progress() as progress:
+    task=progress.add_task(description='working',total=stop_number,redirect_stderr=False)
+    sys.stderr = open(os.devnull, 'w')
+    # 当中断时执行的指令
+    for i in range(stop_number):
+        #print('%d/%d'%(i,stop_number))
+        # 更换负载
+        for core in range(4):
+            for load in range(6):
+                # 当负载为0时计算得到的电阻为无穷大，无法设置，以10000000000作为无穷大
+                if cores_resistance[core].loc[i,'Resistance'] == float('inf'):
+                    ngspice.alter_device(Cores_Load_resistances[core][load],resistance=10000000000)
+                else:
+                    ngspice.alter_device(Cores_Load_resistances[core][load],resistance=cores_resistance[core].loc[i,'Resistance'])
+            
+        # 由于pyspice总是在stop时报错command error，所以使用try except保证后续代码继续执行
+        try:
+            ngspice.resume(background=False)
+        except: 
+            pass
+        progress.update(task_id=task, advance=1,refresh=True)
 
 # 恢复错误输出
 sys.stderr = sys.__stderr__
