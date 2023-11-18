@@ -1,3 +1,13 @@
+'''
+Author: Ardaer yuanxiaowei135@163.com
+Date: 2023-11-04 21:10:04
+LastEditors: Ardaer yuanxiaowei135@163.com
+LastEditTime: 2023-11-19 00:54:25
+FilePath: \processer-pyspice\simulater.py
+Description: 
+
+Copyright (c) 2023 by Ardaer, All Rights Reserved. 
+'''
 # %%
 # 导入库函数
 # PySpice
@@ -13,7 +23,7 @@ import re
 # 屏蔽错误输出
 import sys,os
 # 进度条,在jupyter notebook中需要使用tqdm.notebook中的库，在正常py中只要使用tqdm中的库
-from tqdm.notebook import trange # 在jupyter notebook文件中使用这个
+#from tqdm.notebook import trange # 在jupyter notebook文件中使用这个
 from rich.progress import Progress
 # from tqdm import trange # 在py文件中使用这个
 
