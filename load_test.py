@@ -12,7 +12,9 @@ Copyright (c) 2023 by Ardaer, All Rights Reserved.
 from multiprocessing import Process
 import math, time
 from func_timeout import func_set_timeout,exceptions
-@func_set_timeout(5)
+time_load=0.01
+time_sleep=0.05
+@func_set_timeout(time_load)
 def load():
     tmp=7.0
     while True:
@@ -25,7 +27,7 @@ def task():
         try:
             load()
         except exceptions.FunctionTimedOut:
-            time.sleep(5)
+            time.sleep(time_sleep)
 if __name__=='__main__':
     p1=Process(target=task)
     p2=Process(target=task)
